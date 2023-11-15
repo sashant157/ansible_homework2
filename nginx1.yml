@@ -1,0 +1,41 @@
+---
+- name: NGINX | Install and configure NGINX
+  hosts: nginx1
+  become: true
+  vars:
+   nginx_listen_port: 8080  
+  tasks:
+    - name: Install EPEL Repo package from srandard repo
+      yum:
+        name: epel-release
+        state: present
+      tags:
+        - epel-package
+        - packages
+    - name: NGINX | Install NGINX package from EPEL repo
+      yum:
+        name: nginx
+        state: latest
+      notify:
+        - restart nginx
+      tags:
+        - nginx-package
+        - packages
+    - name: NGINX | Create NGINX config file from template
+      template:
+        src: /ansible_test/templates/nginx.conf.j2
+        dest: /etc/nginx/nginx.conf
+      notify:
+        - reload nginx
+      tags:
+        - nginx-config     
+  handlers:
+    - name: restart nginx
+      systemd:
+        name: nginx
+        state: restarted
+        enabled: yes
+    - name: reload nginx
+      systemd:
+        name: nginx
+        state: reloaded  
